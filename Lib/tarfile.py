@@ -2274,7 +2274,11 @@ class TarFile(object):
         """Set file permissions of targetpath according to tarinfo.
         """
         try:
-            os.chmod(targetpath, tarinfo.mode)
+            # Ensure sgid bit is set on extracted files if targetpath has it
+            if os.path.isdir(targetpath):
+               os.chmod(targetpath, tarinfo.mode | (os.lstat(os.path.dirname(targetpath)).st_mode & stat.S_ISGID))
+            else:
+               os.chmod(targetpath, tarinfo.mode)
         except OSError:
             raise ExtractError("could not change mode")
 
